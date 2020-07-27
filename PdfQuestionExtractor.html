@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <script src="http://mozilla.github.io/pdf.js/build/pdf.js"></script>
+        <link href="pdfQuestionExtractor.css" type="text/css" rel="stylesheet"/>
+    </head>
+    <body>
+        <h1>PDF.js Review Questions Extractor</h1>
+        <div>
+            <label for="pdfFile">Enter file name:</label>
+            <input type="text" id="pdfFile" name="pdfFile" value="https://tubopdfs.s3.amazonaws.com/SA-A-SybexPracticeTests1000Qs.pdf" size="50">
+            <input type="button" id="loadFile" value="Go">
+        </div>
+        <div id="fileDetails">
+            <label>Total Pages: </label>
+            <span id="totalPages"></span>
+        </div>
+        <div id="navigation">
+            <div id="pageNav">
+                <label for="pageNum">Display page:</label>
+                <input type="text" id="pageNum" name="pageNum" value="1" size="5">
+                <input type="button" id="gotoPage" value="Go">
+            </div>
+
+            <div id="find">
+                <label for="textToFind">Find text:</label>
+                <input type="text" id="textToFind" name="textToFind" value="Acknowledgments" size="25">
+                <input type="button" id="findNext" value="Find Next">
+                <input type="button" id="findPrev" value="Find Previous">
+            </div>
+        </div>
+        <div id="controls">
+            <label for="fromPageNum">Question pages:</label>
+            <input type="text" id="qPageNumFrom" name="qPageNumFrom" value="1" size="5">
+            <label for="toPageNum"> to </label>
+            <input type="text" id="qPageNumTo" name="qPageNumTo" value="1" size="5">
+            <input type="button" id="printQPages" value="Print Question Pages">
+            <br>
+            <label for="answersOnPage">Answers pages:</label>
+            <input type="text" id="ansPageNumFrom" name="ansPageNumFrom" value="1" size="5">
+            <label for="ansPageNumTo"> to </label>
+            <input type="text" id="ansPageNumTo" name="ansPageNumTo" value="1" size="5">
+            <input type="button" id="printAPages" value="Print Answer Pages">
+            <br>
+            <input type="button" id="createQuiz" value="Create Quiz">
+        </div>
+        <canvas id="the-canvas"></canvas>
+        <script src="pdfTextToQuizFormat.js"></script>
+        <script src="pdfQuestionExtractor.js"></script>
+        <script>
+            document.getElementById("loadFile").addEventListener('click', initialize);
+        </script>
+    </body>
+</html>

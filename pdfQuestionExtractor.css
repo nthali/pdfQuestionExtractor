@@ -1,0 +1,13 @@
+button {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+input {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+#the-canvas {
+    border: 1px solid black;
+    direction: ltr;
+  }
