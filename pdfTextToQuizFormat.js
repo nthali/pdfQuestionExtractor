@@ -2,9 +2,9 @@ class QuizCreator {
     #questionExtractor = new QuestionDataExtractor();
     #answerExtractor = new AnswerDataExtractor();
 
-    createQuiz( questionsText, answersText ) {
+    createQuiz( questionsText, answersText, qNum=1 ) {
         const quiz = new Quiz();
-        quiz.addQuestions( this.#questionExtractor.extractQuestions( questionsText ) );
+        quiz.addQuestions( this.#questionExtractor.extractQuestions( questionsText, qNum ) );
         quiz.addAnswers( this.#answerExtractor.extractAnswers( answersText ) );
         return quiz;
     }
@@ -145,14 +145,14 @@ class QuestionDataExtractor {
     /**
      * Takes an array of extractedText, cleans up and condenses the array into a single string 
      * and then extracts the question and choices 
-     * @param {String[]} extractedTextLines 
+     * @param {Array} extractedTextLines 
      */
-    extractQuestions( extractedTextLinesArray ) {
+    extractQuestions( extractedTextLinesArray, qNum=1 ) {
         // convert all whitespace to single whitespace
         var trimmedLine = StringUtils.tabsToSingleWhitespace( extractedTextLinesArray );
 
         const quizQuestions = [];
-        var questionStringArray = this.separateQuestionStringChunksFromFullText(trimmedLine);
+        var questionStringArray = this.separateQuestionStringChunksFromFullText(trimmedLine, qNum);
         questionStringArray.forEach( (questionString, index) => {
             var questionAndChoices = this.extractQuestion( questionString );
             quizQuestions.push( new QuizQuestion( index+1, questionAndChoices[0], questionAndChoices[1] ) );
@@ -223,10 +223,8 @@ class QuestionDataExtractor {
         const questionStringArray = [];
         var currIndex = 0;
         while ( currIndex < fullText.length ) {
-            var re1 = new RegExp(currQNum.toString() + '[ ]*\\.', "g");
-            var re2 = new RegExp((currQNum+1).toString() + '[ ]*\\.', "g");
-            var startOfThisQuestion = this.indexOf( currQNum, fullText );
-            var startOfNextQuestion = this.indexOf( currQNum+1, fullText );
+            var startOfThisQuestion = StringUtils.indexOf( currQNum, '[ ]*\\.', fullText );
+            var startOfNextQuestion = StringUtils.indexOf( currQNum+1, '[ ]*\\.', fullText );
             if ( startOfNextQuestion != -1 ) {
                 questionStringArray.push( fullText.substring( startOfThisQuestion, startOfNextQuestion ).trim() );
                 currIndex = startOfNextQuestion;
@@ -239,7 +237,35 @@ class QuestionDataExtractor {
         }
         return questionStringArray;
     }
+}
 
+class AnswerDataExtractor {
+    // '3.   B.   Many of these answers are nonsensical in terms of what AWS allows. The limits on size  related to S3 are for objects; an individual object can be as large as 5 TB. Both A and C,  then, are not useful (or possible). D proposes to increase the maximum object size to 50  GB, but the maximum object size is already 5 TB. Option B is correct; AWS recommends  using Multipart Upload for all objects larger than 100 MB.      '
+    // '4.   C, D.   PUTs of new objects have a read after write consistency. DELETEs and overwrite  PUTs have eventual consistency across S3.      '
+    extractAnswers( answerPagesTextArray, qNum=1 ) {
+        const answersText = StringUtils.tabsToSingleWhitespace( answerPagesTextArray );
+        const answers = [];
+        while (answersText.indexOf(qNum + ".") > -1) {
+            // var re1 = new RegExp(qNum + '\\.[\\s]+[A-E]', 'g');
+            // const ansStart = answersText.search(re1);
+            const ansStart = StringUtils.indexOf( qNum, '\\.[\\s]+[A-E]', answersText );
+            const afterPeriodPos = ansStart+qNum.toString().length+1;
+            const ansStr = answersText.substring(afterPeriodPos, answersText.indexOf('.', afterPeriodPos)).trim();
+            if (ansStr.indexOf(',') > -1) { // multiple correct answers
+                var arr = ansStr.split(',').map( item => item.trim() );
+                answers.push(arr);
+            } else {
+                answers.push(ansStr);
+            }
+            qNum++;
+        }
+        return answers;
+    }
+
+}
+
+class StringUtils {
+    
     /**
      * The whole reason this helper method exists is because one of the question numbers
      * in a pdf got extracted as '6 7', instead of 67. Go figure.
@@ -247,8 +273,8 @@ class QuestionDataExtractor {
      * @param {Integer} currQNum the question number we are looking for
      * @param {String} text the text string in which to search
      */
-    indexOf( currQNum, text ) {
-        var re1 = new RegExp(currQNum.toString() + '[ ]*\\.', "g");
+    static indexOf( currQNum, regexStr, text ) {
+        var re1 = new RegExp(currQNum.toString() + regexStr, "g");
         var pos = text.search( re1 );
         if ( pos > -1 ) {
             return pos;
@@ -270,34 +296,7 @@ class QuestionDataExtractor {
         pos = text.search( re2 );
         return pos;
     }
-}
 
-class AnswerDataExtractor {
-    // '3.   B.   Many of these answers are nonsensical in terms of what AWS allows. The limits on size  related to S3 are for objects; an individual object can be as large as 5 TB. Both A and C,  then, are not useful (or possible). D proposes to increase the maximum object size to 50  GB, but the maximum object size is already 5 TB. Option B is correct; AWS recommends  using Multipart Upload for all objects larger than 100 MB.      '
-    // '4.   C, D.   PUTs of new objects have a read after write consistency. DELETEs and overwrite  PUTs have eventual consistency across S3.      '
-    extractAnswers( answerPagesTextArray, qNum=1 ) {
-        const answersText = StringUtils.tabsToSingleWhitespace( answerPagesTextArray );
-        const answers = [];
-        while (answersText.indexOf(qNum + ".") > -1) {
-            var re1 = new RegExp(qNum + '\\.[\\s]+[A-E]', 'g');
-            const ansStart = answersText.search(re1);
-            const afterPeriodPos = ansStart+qNum.toString().length+1;
-            const ansStr = answersText.substring(afterPeriodPos, answersText.indexOf('.', afterPeriodPos)).trim();
-            if (ansStr.indexOf(',') > -1) { // multiple correct answers
-                var arr = ansStr.split(',').map( item => item.trim() );
-                answers.push(arr);
-            } else {
-                answers.push(ansStr);
-            }
-            qNum++;
-        }
-        return answers;
-    }
-
-}
-
-class StringUtils {
-    
     static tabsToSingleWhitespace(extractedTextLines) {
         var extractedTextLinesTrimmed = "";
         extractedTextLines.forEach( (line) => {

@@ -98,6 +98,134 @@ test( 'extract question chunks from text with incorrect q number', () => {
     expect( qStrArray[3] ).toEqual( '6 7.   In which regions does Amazon S3 offer eventual consistency for overwrite PUTs and  DELETEs? A.   All US regions B.   All US and EU regions C.   All regions D.   No regions, eventual consistency is not the model for overwrite PUTs.' );
 });
 
+test( 'full quiz creation for page with num 6 7', () => {
+    // Q67 shows up as 6 7, instead of 67 :(
+    const sybexQuestionsProblemPage = 
+        "Review Questions   13    " + 
+        "64.   How long is a presigned URL valid? " +
+        "A.   60 seconds " + 
+        "B.   60 minutes " + 
+        "C.   24 hours " + 
+        "D.   As long as it is configured to last    " + 
+        "65.   Which of the following HTTP methods with regard to S3 have eventual consistency?  (Choose two.) " + 
+        "A.      UPDATEs " + 
+        "B.      DELETEs " + 
+        "C.   PUTs of new objects " + 
+        "D.   Over write PU Ts    " + 
+        "66.   Which of the following behaviors is consistent with how S3 handles object operations on a  bucket? " + 
+        "A.   A process writes a new object to Amazon S3 and immediately lists keys within its  bucket. The new object does not appear in the list of keys. " + 
+        "B.   A process deletes an object, attempts to immediately read the deleted object, and S3  still returns the deleted data. " + 
+        "C.   A process deletes an object and immediately lists the keys in the bucket. S3 returns a  list with the deleted object in the list. " + 
+        "D.   All of the above    " + 
+        "6 7.   In which regions does Amazon S3 offer eventual consistency for overwrite PUTs and  DELETEs? " + 
+        "A.   All US regions " + 
+        "B.   All US and EU regions " + 
+        "C.   All regions " + 
+        "D.   No regions, eventual consistency is not the model for overwrite PUTs.    " + 
+        "68.   Which of the following storage media are object based? (Choose two.) " + 
+        "A.     S3-IA " + 
+        "B.      EBS " + 
+        "C.      EFS " + 
+        "D.   S3 standard    " + 
+        "69.   EBS stands for what? " + 
+        "A.   Elastic Based Storage " + 
+        "B.   Elastic Block Storage " + 
+        "C.   Extra Block Storage " + 
+        "D.   Ephemeral Block Storage";
+
+    const correspondingAnswersPage = 
+        "Domain 1: Design Resilient Architectures   187    " + 
+        "59.   B.   S3 uploads are, by default, done via a single operation, usually via a single PUT  operation. AWS suggests that you can upload objects up to 100 MB before changing to  Multipart Upload.    " + 
+        "60.   B.   Using the Multipart Upload is almost entirely a function of the size of the files being  uploaded. AWS recommends using it for any files greater than 100 MB, and 10 GB is  certainly large enough to benefit from Multipart Uploads.    " + 
+        "61.   A, C.   Multipart Upload is, as should be the easiest answer, ideal for large objects on  stable networks (A). But it also helps handle less-reliable networks as smaller parts can fail  while others get through, reducing the overall failure rate (C). There is no cost associated  with data ingress (B), and D doesn’t make much sense at all!    " + 
+        "62.   A, C.   Presigned URLs are created to allow users without AWS credentials to access  specific resources (option C). And it’s the creator of the URL (option A) that assigns these  permissions, rather than the user (option B). Finally, these credentials are associated with  the URL but are not encrypted into the URL itself.    " + 
+        "63.   D.   Presigned URLs are not tied to specific AWS services. They are simply URLs that  can point at anything a normal URL can point at, except that the creator can associate  permissions and a timeout with the URL.    " + 
+        "64.   D.   A presigned URL is always configured at creation for a valid Time to Live (often  referred to as TTL). This time can be very short, or quite long.    " + 
+        "65.   B, D.   Overwrite PUTs and DELETEs have eventual consistency. PUTs of new objects have  write and then read consistency.    " + 
+        "66.   D.   These are all consistent with S3 behavior. Option A could occur as the new object is  being propagated to additional S3 buckets. B and C could occur as a result of eventual  consistency, where a DELETE operation does not immediately appear.    " + 
+        "6 7.   C.   All regions have eventual consistency for overwrite PUTs and DELETEs.    " + 
+        "68.   A, D.   All S3 storage classes are object-based, while EBS and EFS are block-based.    " + 
+        "69.   B.   EBS stands for Elastic Block Storage.    " + 
+        "70.   B.   New objects uploaded via PUT are subject to read after write consistency. Overwrite  PUTs use the eventual consistency model.    " + 
+        "71.   C.   This is important because it reflects a recent change by AWS. Until 2018, there was a  hard limit on S3 of 100 PUTs per second, but that limit has now been raised to 3500 PUTs  per second.    " + 
+        "72.   B.   S3 buckets have names based upon the S3 identifier (s3), the region (us-west-1 in this  case), and the  amazonaws.com  domain. Then, the bucket name appears  after  the domain.  That results in B,  https://s3-us-west-1.amazonaws.com/prototypeBucket32 . Option  A has an incorrect region, and both C and D have the bucket name in the domain, which  is incorrect.";
+    
+    const expectedQuizJsonFor6_7 = 
+        "const myQuestions = [\n" +
+            "// Q64\n" +
+            "{\n" +
+            "  question: 'How long is a presigned URL valid?',\n" +
+            "  choices: {\n" +
+            "    a: '60 seconds',\n" +
+            "    b: '60 minutes',\n" +
+            "    c: '24 hours',\n" +
+            "    d: 'As long as it is configured to last'\n" +
+            "  },\n" +
+            "  answer: 'D'\n" +
+            "},\n" +
+            "// Q65\n" +
+            "{\n" +
+            "  question: 'Which of the following HTTP methods with regard to S3 have eventual consistency?  (Choose two.)',\n" +
+            "  choices: {\n" +
+            "    a: 'UPDATEs',\n" +
+            "    b: 'DELETEs',\n" +
+            "    c: 'PUTs of new objects',\n" +
+            "    d: 'Over write PU Ts'\n" +
+            "  },\n" +
+            "  answer: [ 'B', 'D' ]\n" +
+            "},\n" +
+            "// Q66\n" +
+            "{\n" +
+            "  question: 'Which of the following behaviors is consistent with how S3 handles object operations on a  bucket?',\n" +
+            "  choices: {\n" +
+            "    a: 'A process writes a new object to Amazon S3 and immediately lists keys within its  bucket. The new object does not appear in the list of keys.',\n" +
+            "    b: 'A process deletes an object, attempts to immediately read the deleted object, and S3  still returns the deleted data.',\n" +
+            "    c: 'A process deletes an object and immediately lists the keys in the bucket. S3 returns a  list with the deleted object in the list.',\n" +
+            "    d: 'All of the above'\n" +
+            "  },\n" +
+            "  answer: 'D'\n" +
+            "},\n" +
+            "// Q67\n" +
+            "{\n" +
+            "  question: 'In which regions does Amazon S3 offer eventual consistency for overwrite PUTs and  DELETEs?',\n" +
+            "  choices: {\n" +
+            "    a: 'All US regions',\n" +
+            "    b: 'All US and EU regions',\n" +
+            "    c: 'All regions',\n" +
+            "    d: 'No regions, eventual consistency is not the model for overwrite PUTs.'\n" +
+            "  },\n" +
+            "  answer: 'C'\n" +
+            "},\n" +
+            "// Q68\n" +
+            "{\n" +
+            "  question: 'Which of the following storage media are object based? (Choose two.)',\n" +
+            "  choices: {\n" +
+            "    a: 'S3-IA',\n" +
+            "    b: 'EBS',\n" +
+            "    c: 'EFS',\n" +
+            "    d: 'S3 standard'\n" +
+            "  },\n" +
+            "  answer: [ 'A', 'D' ]\n" +
+            "},\n" +
+            "// Q69\n" +
+            "{\n" +
+            "  question: 'EBS stands for what?',\n" +
+            "  choices: {\n" +
+            "    a: 'Elastic Based Storage',\n" +
+            "    b: 'Elastic Block Storage',\n" +
+            "    c: 'Extra Block Storage',\n" +
+            "    d: 'Ephemeral Block Storage'\n" +
+            "  },\n" +
+            "  answer: 'B'\n" +
+            "}];";
+
+    const qExtractor = new QuestionDataExtractor();
+    const quizCreator = new QuizCreator();
+    const quiz = quizCreator.createQuiz( [sybexQuestionsProblemPage], [correspondingAnswersPage], 64 );
+    expect( quiz.totalQuestions() ).toBe( 6 );
+    // expect( quiz.toJson() ).toEqual( expectedQuizJsonFor6_7 );
+});
+
 test( 'extractQuestionDataFromText', () => {
     const trimmedText = "Review	Questions 1 . In what ways does Amazon Simple Storage Service (Amazon S3) object storage differ from block and file storage? (Choose 2 answers) A . Amazon S3 stores data in fixed size blocks. B . Objects are identified by a numbered address. C . Objects can be any size. D . Objects contain both data and metadata. E . Objects are stored in buckets.";
     const expectedQuestion = "In what ways does Amazon Simple Storage Service (Amazon S3) object storage differ from block and file storage? (Choose 2 answers)";
