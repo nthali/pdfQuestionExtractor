@@ -59,13 +59,13 @@ test( 'extract question data for string with only question and no choices extrac
     expect( q[0] ).toEqual( expectedQ );
 });
 
-test( 'separateQuestionStringChunksForSybexPracticeExamText', () => {
+test( 'splitQuestionStrings For Sybex Practice Exam Text', () => {
     const qExtractor = new QuestionDataExtractor();
-    const questionStringArray = qExtractor.separateQuestionStringChunksFromFullText( sybexQuestionsFirstPage );
+    const questionStringArray = qExtractor.splitQuestionStrings( sybexQuestionsFirstPage );
     expect( questionStringArray.length ).toBe( 4 ); // 4 Questions
 });
 
-test( 'separateQuestionStringChunksFromFullText', () => {
+test( 'splitQuestionStrings From FullText', () => {
     const fullText = "Review Questions 1 . In what ways does Amazon Simple Storage Service (Amazon S3) object storage differ from block and file storage? (Choose 2 answers) A . Amazon S3 stores data in fixed size blocks. B . Objects are identified by a numbered address. C . Objects can be any size. D . Objects contain both data and metadata. E . Objects are stored in buckets. 2 . Which of the following are not appropriates use cases for Amazon Simple Storage Service (Amazon S3)? (Choose 2 answers) A . Storing web content B . Storing a file system mounted to an Amazon Elastic Compute Cloud (Amazon EC2) instance C . Storing backups for a relational database D . Primary storage for a database E . Storing logs for analytics 3 . What are some of the key characteristics of Amazon Simple Storage Service (Amazon S3)? (Choose 3 answers) A . All objects have a URL. B . Amazon S3 can store unlimited amounts of data. C . Objects are world-readable by default. D . Amazon S3 uses a REST (Representational State Transfer) Application Program Interface (API). E . You must pre-allocate the storage in a bucket. 4 . Which features can be used to restrict access to Amazon Simple Storage Service (Amazon S3) data? (Choose 3 answers) A . Enable static website hosting on the bucket. B . Create a pre-signed URL for an object. C . Use an Amazon S3 Access Control List (ACL) on a bucket or object. D . Use a lifecycle	policy. E . Use an Amazon S3 bucket policy.";
     const expectedQuestionStrings = [
         "1 . In what ways does Amazon Simple Storage Service (Amazon S3) object storage differ from block and file storage? (Choose 2 answers) A . Amazon S3 stores data in fixed size blocks. B . Objects are identified by a numbered address. C . Objects can be any size. D . Objects contain both data and metadata. E . Objects are stored in buckets.",
@@ -74,14 +74,14 @@ test( 'separateQuestionStringChunksFromFullText', () => {
         "4 . Which features can be used to restrict access to Amazon Simple Storage Service (Amazon S3) data? (Choose 3 answers) A . Enable static website hosting on the bucket. B . Create a pre-signed URL for an object. C . Use an Amazon S3 Access Control List (ACL) on a bucket or object. D . Use a lifecycle	policy. E . Use an Amazon S3 bucket policy."
     ];
     const qExtractor = new QuestionDataExtractor();
-    const questionStringArray = qExtractor.separateQuestionStringChunksFromFullText( fullText );
+    const questionStringArray = qExtractor.splitQuestionStrings( fullText );
     expect( questionStringArray.length ).toBe( 4 ); // 4 Questions
     questionStringArray.forEach( (questionStr, index) => {
         expect( questionStr ).toEqual( expectedQuestionStrings[index] );
     });
 });
 
-test( 'extract question chunks from text with incorrect q number', () => {
+test( 'splitQuestionStrings from text with incorrect q number', () => {
     // Q67 shows up as 6 7, instead of 67 :(
     const sybexQuestionsProblemPage = 
     "Review Questions   13    " + 
@@ -93,7 +93,7 @@ test( 'extract question chunks from text with incorrect q number', () => {
     "69.   EBS stands for what? A.   Elastic Based Storage B.   Elastic Block Storage C.   Extra Block Storage D.   Ephemeral Block Storage";
 
     const qExtractor = new QuestionDataExtractor();
-    const qStrArray = qExtractor.separateQuestionStringChunksFromFullText( sybexQuestionsProblemPage, 64 );
+    const qStrArray = qExtractor.splitQuestionStrings( sybexQuestionsProblemPage, 64 );
     expect( qStrArray.length ).toBe( 6 );
     expect( qStrArray[3] ).toEqual( '6 7.   In which regions does Amazon S3 offer eventual consistency for overwrite PUTs and  DELETEs? A.   All US regions B.   All US and EU regions C.   All regions D.   No regions, eventual consistency is not the model for overwrite PUTs.' );
 });
@@ -133,23 +133,6 @@ test( 'full quiz creation for page with num 6 7', () => {
         "C.   Extra Block Storage " + 
         "D.   Ephemeral Block Storage";
 
-    const correspondingAnswersPage = 
-        "Domain 1: Design Resilient Architectures   187    " + 
-        "59.   B.   S3 uploads are, by default, done via a single operation, usually via a single PUT  operation. AWS suggests that you can upload objects up to 100 MB before changing to  Multipart Upload.    " + 
-        "60.   B.   Using the Multipart Upload is almost entirely a function of the size of the files being  uploaded. AWS recommends using it for any files greater than 100 MB, and 10 GB is  certainly large enough to benefit from Multipart Uploads.    " + 
-        "61.   A, C.   Multipart Upload is, as should be the easiest answer, ideal for large objects on  stable networks (A). But it also helps handle less-reliable networks as smaller parts can fail  while others get through, reducing the overall failure rate (C). There is no cost associated  with data ingress (B), and D doesn’t make much sense at all!    " + 
-        "62.   A, C.   Presigned URLs are created to allow users without AWS credentials to access  specific resources (option C). And it’s the creator of the URL (option A) that assigns these  permissions, rather than the user (option B). Finally, these credentials are associated with  the URL but are not encrypted into the URL itself.    " + 
-        "63.   D.   Presigned URLs are not tied to specific AWS services. They are simply URLs that  can point at anything a normal URL can point at, except that the creator can associate  permissions and a timeout with the URL.    " + 
-        "64.   D.   A presigned URL is always configured at creation for a valid Time to Live (often  referred to as TTL). This time can be very short, or quite long.    " + 
-        "65.   B, D.   Overwrite PUTs and DELETEs have eventual consistency. PUTs of new objects have  write and then read consistency.    " + 
-        "66.   D.   These are all consistent with S3 behavior. Option A could occur as the new object is  being propagated to additional S3 buckets. B and C could occur as a result of eventual  consistency, where a DELETE operation does not immediately appear.    " + 
-        "6 7.   C.   All regions have eventual consistency for overwrite PUTs and DELETEs.    " + 
-        "68.   A, D.   All S3 storage classes are object-based, while EBS and EFS are block-based.    " + 
-        "69.   B.   EBS stands for Elastic Block Storage.    " + 
-        "70.   B.   New objects uploaded via PUT are subject to read after write consistency. Overwrite  PUTs use the eventual consistency model.    " + 
-        "71.   C.   This is important because it reflects a recent change by AWS. Until 2018, there was a  hard limit on S3 of 100 PUTs per second, but that limit has now been raised to 3500 PUTs  per second.    " + 
-        "72.   B.   S3 buckets have names based upon the S3 identifier (s3), the region (us-west-1 in this  case), and the  amazonaws.com  domain. Then, the bucket name appears  after  the domain.  That results in B,  https://s3-us-west-1.amazonaws.com/prototypeBucket32 . Option  A has an incorrect region, and both C and D have the bucket name in the domain, which  is incorrect.";
-    
     const expectedQuizJsonFor6_7 = 
         "const myQuestions = [\n" +
             "// Q64\n" +
@@ -219,12 +202,50 @@ test( 'full quiz creation for page with num 6 7', () => {
             "  answer: 'B'\n" +
             "}];";
 
-    const qExtractor = new QuestionDataExtractor();
     const quizCreator = new QuizCreator();
-    const quiz = quizCreator.createQuiz( [sybexQuestionsProblemPage], [correspondingAnswersPage], 64 );
-    expect( quiz.totalQuestions() ).toBe( 6 );
+    const quiz = quizCreator.createQuiz( [sybexQuestionsProblemPage], [ANSWERS_PAGE_FOR_6_7], 64, 59 );
     // expect( quiz.toJson() ).toEqual( expectedQuizJsonFor6_7 );
 });
+
+test( "findIndexOf in Quiz", () => {
+    answers = [ [59, 'a'], [60, 'b'], [61, 'c'], [62, 'd']];
+    const quiz = new Quiz();
+    expect( quiz.findIndexOf( 60, answers ) ).toBe( 1 );
+});
+
+const ANSWERS_PAGE_FOR_6_7 = 
+"Domain 1: Design Resilient Architectures   187    " + 
+"59.   B.   S3 uploads are, by default, done via a single operation, usually via a single PUT  operation. AWS suggests that you can upload objects up to 100 MB before changing to  Multipart Upload.    " + 
+"60.   B.   Using the Multipart Upload is almost entirely a function of the size of the files being  uploaded. AWS recommends using it for any files greater than 100 MB, and 10 GB is  certainly large enough to benefit from Multipart Uploads.    " + 
+"61.   A, C.   Multipart Upload is, as should be the easiest answer, ideal for large objects on  stable networks (A). But it also helps handle less-reliable networks as smaller parts can fail  while others get through, reducing the overall failure rate (C). There is no cost associated  with data ingress (B), and D doesn’t make much sense at all!    " + 
+"62.   A, C.   Presigned URLs are created to allow users without AWS credentials to access  specific resources (option C). And it’s the creator of the URL (option A) that assigns these  permissions, rather than the user (option B). Finally, these credentials are associated with  the URL but are not encrypted into the URL itself.    " + 
+"63.   D.   Presigned URLs are not tied to specific AWS services. They are simply URLs that  can point at anything a normal URL can point at, except that the creator can associate  permissions and a timeout with the URL.    " + 
+"64.   D.   A presigned URL is always configured at creation for a valid Time to Live (often  referred to as TTL). This time can be very short, or quite long.    " + 
+"65.   B, D.   Overwrite PUTs and DELETEs have eventual consistency. PUTs of new objects have  write and then read consistency.    " + 
+"66.   D.   These are all consistent with S3 behavior. Option A could occur as the new object is  being propagated to additional S3 buckets. B and C could occur as a result of eventual  consistency, where a DELETE operation does not immediately appear.    " + 
+"6 7.   C.   All regions have eventual consistency for overwrite PUTs and DELETEs.    " + 
+"68.   A, D.   All S3 storage classes are object-based, while EBS and EFS are block-based.    " + 
+"69.   B.   EBS stands for Elastic Block Storage.    " + 
+"70.   B.   New objects uploaded via PUT are subject to read after write consistency. Overwrite  PUTs use the eventual consistency model.    " + 
+"71.   C.   This is important because it reflects a recent change by AWS. Until 2018, there was a  hard limit on S3 of 100 PUTs per second, but that limit has now been raised to 3500 PUTs  per second.    " + 
+"72.   B.   S3 buckets have names based upon the S3 identifier (s3), the region (us-west-1 in this  case), and the  amazonaws.com  domain. Then, the bucket name appears  after  the domain.  That results in B,  https://s3-us-west-1.amazonaws.com/prototypeBucket32 . Option  A has an incorrect region, and both C and D have the bucket name in the domain, which  is incorrect.";
+
+const INDIVIDUAL_ANS_STRINGS_FOR_6_7 = [
+    "59.   B.   S3 uploads are, by default, done via a single operation, usually via a single PUT  operation. AWS suggests that you can upload objects up to 100 MB before changing to  Multipart Upload.",
+    "60.   B.   Using the Multipart Upload is almost entirely a function of the size of the files being  uploaded. AWS recommends using it for any files greater than 100 MB, and 10 GB is  certainly large enough to benefit from Multipart Uploads.",
+    "61.   A, C.   Multipart Upload is, as should be the easiest answer, ideal for large objects on  stable networks (A). But it also helps handle less-reliable networks as smaller parts can fail  while others get through, reducing the overall failure rate (C). There is no cost associated  with data ingress (B), and D doesn’t make much sense at all!",
+    "62.   A, C.   Presigned URLs are created to allow users without AWS credentials to access  specific resources (option C). And it’s the creator of the URL (option A) that assigns these  permissions, rather than the user (option B). Finally, these credentials are associated with  the URL but are not encrypted into the URL itself.",
+    "63.   D.   Presigned URLs are not tied to specific AWS services. They are simply URLs that  can point at anything a normal URL can point at, except that the creator can associate  permissions and a timeout with the URL.",
+    "64.   D.   A presigned URL is always configured at creation for a valid Time to Live (often  referred to as TTL). This time can be very short, or quite long.",
+    "65.   B, D.   Overwrite PUTs and DELETEs have eventual consistency. PUTs of new objects have  write and then read consistency.",
+    "66.   D.   These are all consistent with S3 behavior. Option A could occur as the new object is  being propagated to additional S3 buckets. B and C could occur as a result of eventual  consistency, where a DELETE operation does not immediately appear.",
+    "6 7.   C.   All regions have eventual consistency for overwrite PUTs and DELETEs.",
+    "68.   A, D.   All S3 storage classes are object-based, while EBS and EFS are block-based.",
+    "69.   B.   EBS stands for Elastic Block Storage.",
+    "70.   B.   New objects uploaded via PUT are subject to read after write consistency. Overwrite  PUTs use the eventual consistency model.",
+    "71.   C.   This is important because it reflects a recent change by AWS. Until 2018, there was a  hard limit on S3 of 100 PUTs per second, but that limit has now been raised to 3500 PUTs  per second.",
+    "72.   B.   S3 buckets have names based upon the S3 identifier (s3), the region (us-west-1 in this  case), and the  amazonaws.com  domain. Then, the bucket name appears  after  the domain.  That results in B,  https://s3-us-west-1.amazonaws.com/prototypeBucket32 . Option  A has an incorrect region, and both C and D have the bucket name in the domain, which  is incorrect."
+];
 
 test( 'extractQuestionDataFromText', () => {
     const trimmedText = "Review	Questions 1 . In what ways does Amazon Simple Storage Service (Amazon S3) object storage differ from block and file storage? (Choose 2 answers) A . Amazon S3 stores data in fixed size blocks. B . Objects are identified by a numbered address. C . Objects can be any size. D . Objects contain both data and metadata. E . Objects are stored in buckets.";
@@ -253,16 +274,34 @@ test( 'convert a problematic sybex question', () => {
     expect( questionAndChoices[1][1] ).toEqual( "Ensure that your web designers are using applications or clients that take advantage  of the Multipart Upload API for all uploaded objects." );
 });
 
-test( 'extractAnswer single page', () => {
+test( 'extractAnswers single page', () => {
     const ansExtractor = new AnswerDataExtractor();
     const answers = ansExtractor.extractAnswers( [ sybexAnswerPageText ] );
-    expect( answers ).toEqual([ 'B', 'B', 'B', [ 'C', 'D' ], 'C', 'A', 'C', 'A', 'B' ]);
+    expect( answers ).toEqual(
+        [ [1, 'B'], [2, 'B'], [3, 'B'], [4, [ 'C', 'D' ]], 
+        [5, 'C'], [6, 'A'], [7, 'C'], [8, 'A'], [9, 'B'] ]);
 });
 
-test( 'extractAnswer second page', () => {
+test( 'extractAnswers second page', () => {
     const ansExtractor = new AnswerDataExtractor();
     const answers = ansExtractor.extractAnswers( [ sybexAnswer2ndPageText ], 10 );
-    expect( answers ).toEqual([ [ 'A', 'C' ], [ 'A', 'D' ], 'D', 'D', [ 'A', 'D' ], [ 'A', 'D' ], 'D', 'D', 'B' ]);
+    expect( answers ).toEqual(
+        [ [10, [ 'A', 'C' ]], [11, [ 'A', 'D' ]], [12, 'D'], [13, 'D'], 
+        [14, [ 'A', 'D' ]], [15, [ 'A', 'D' ]], [16, 'D'], [17, 'D'], [18, 'B'] ]);
+});
+
+test( 'extractAnswers for 6 7', () => {
+    const ansExtractor = new AnswerDataExtractor();
+    const answers = ansExtractor.extractAnswers( [ANSWERS_PAGE_FOR_6_7], 59 );
+    expect( answers ).toEqual( 
+        [ [59, 'B'], [60, 'B'], [61, [ 'A', 'C' ]], [62, [ 'A', 'C' ]], 
+        [63, 'D'], [64, 'D'], [65, [ 'B', 'D' ]], [66, 'D'], [67, 'C'], 
+        [68, [ 'A', 'D' ]], [69, 'B'], [70, 'B'], [71, 'C'], [72, 'B'] ] );
+});
+
+test( 'splitStringsFromFullText for answer strings', () => {
+    const actual = StringUtils.splitStringsFromFullText( ANSWERS_PAGE_FOR_6_7,  '\\.[\\s]+[A-E]', 59 );
+    expect( actual ).toEqual( INDIVIDUAL_ANS_STRINGS_FOR_6_7 );
 });
 
 test( 'tabsToSingleWhitespace', () => {

@@ -2,10 +2,12 @@ class QuizCreator {
     #questionExtractor = new QuestionDataExtractor();
     #answerExtractor = new AnswerDataExtractor();
 
-    createQuiz( questionsText, answersText, qNum=1 ) {
+    createQuiz( questionsText, answersText, qNum=1, aNum=1 ) {
         const quiz = new Quiz();
         quiz.addQuestions( this.#questionExtractor.extractQuestions( questionsText, qNum ) );
-        quiz.addAnswers( this.#answerExtractor.extractAnswers( answersText ) );
+        if ( answersText.length > 0 ) {
+            quiz.addAnswers( this.#answerExtractor.extractAnswers( answersText, aNum ) );
+        }
         return quiz;
     }
 }
@@ -18,9 +20,18 @@ class Quiz {
     }
 
     addAnswers( answers ) {
+        var ansMatchIndex = this.findIndexOf( this.question(0).qNum, answers );
         this.#questions.forEach( (question, index) => {
-            question.answer = answers[index];
+            question.answer = answers[ansMatchIndex+index][1];
         });
+    }
+
+    findIndexOf( qNum, answers ) {
+        for ( var i=0; i<answers.length; i++ ) {
+            if ( answers[i][0] === qNum )
+                return i;
+        }
+        return -1;
     }
 
     addQuestion( question ) {
@@ -54,14 +65,14 @@ class Quiz {
  * and returns the formatted json question
  */
 class QuizQuestion {
-    #index = 1;
+    qNum = 1;
     #question = "";
     #choices = ["", "", "", ""];
     #answer = "";
     #multipleChoice = false;
 
     constructor( index, question, choices, answer ) {
-        this.#index = index;
+        this.qNum = index;
         this.#question = question;
         if ( question.includes("(Choose")) {
             this.#multipleChoice = true;
@@ -97,7 +108,7 @@ class QuizQuestion {
     toJson() {
         const output = [];
         output.push(
-            '// Q' + this.#index + '\n' + // purely convenience
+            '// Q' + this.qNum + '\n' + // purely convenience
             '{\n' +
             "  question: '" + this.#question + "',\n" +
             '  choices: {\n');
@@ -148,16 +159,19 @@ class QuestionDataExtractor {
      * @param {Array} extractedTextLines 
      */
     extractQuestions( extractedTextLinesArray, qNum=1 ) {
-        // convert all whitespace to single whitespace
         var trimmedLine = StringUtils.tabsToSingleWhitespace( extractedTextLinesArray );
 
         const quizQuestions = [];
-        var questionStringArray = this.separateQuestionStringChunksFromFullText(trimmedLine, qNum);
+        var questionStringArray = this.splitQuestionStrings( trimmedLine, qNum );
         questionStringArray.forEach( (questionString, index) => {
             var questionAndChoices = this.extractQuestion( questionString );
-            quizQuestions.push( new QuizQuestion( index+1, questionAndChoices[0], questionAndChoices[1] ) );
+            quizQuestions.push( new QuizQuestion( qNum+index, questionAndChoices[0], questionAndChoices[1] ) );
         });
         return quizQuestions;
+    }
+
+    splitQuestionStrings( trimmedLine, qNum ) {
+        return StringUtils.splitStringsFromFullText(trimmedLine, '[ ]*\\.', qNum);
     }
 
     // hardcoded start and ends may need to be parameterized in the future
@@ -214,17 +228,51 @@ class QuestionDataExtractor {
         }
         return choices;
     }
+}
+
+class AnswerDataExtractor {
+    // '3.   B.   Many of these answers are nonsensical in terms of what AWS allows. The limits on size  related to S3 are for objects; an individual object can be as large as 5 TB. Both A and C,  then, are not useful (or possible). D proposes to increase the maximum object size to 50  GB, but the maximum object size is already 5 TB. Option B is correct; AWS recommends  using Multipart Upload for all objects larger than 100 MB.      '
+    // '4.   C, D.   PUTs of new objects have a read after write consistency. DELETEs and overwrite  PUTs have eventual consistency across S3.      '
+    extractAnswers( answerPagesTextArray, aNum=1 ) {
+        const answersText = StringUtils.tabsToSingleWhitespace( answerPagesTextArray );
+        
+        const answers = [];
+        var answersStrArray = this.splitAnswerStrings( answersText, aNum );
+        answersStrArray.forEach( (singleAnsFullText, index) => {
+            var answer = this.extractAnswer( singleAnsFullText );
+            answers.push( [ aNum+index, answer] );
+        });
+        return answers;
+    }
+
+    extractAnswer( singleAnsFullText ) {
+        var indexOfAnsStart = singleAnsFullText.search(/[A-Z]/g);
+        const ansStr = singleAnsFullText.substring(indexOfAnsStart, singleAnsFullText.indexOf('.', indexOfAnsStart)).trim();
+        if (ansStr.indexOf(',') > -1) { // multiple correct answers
+            var arr = ansStr.split(',').map( item => item.trim() );
+            return arr;
+        } else {
+            return ansStr;
+        }
+    }
+
+    splitAnswerStrings( answersText, qNum=1 ) {
+        return StringUtils.splitStringsFromFullText( answersText, '\\.[\\s]+[A-E]', qNum );
+    }
+}
+
+class StringUtils {
 
     /**
      * This function separates the full text string out into an array of individual questions
      * @param {String} fullText 
      */
-    separateQuestionStringChunksFromFullText( fullText, currQNum=1 ) {
+    static splitStringsFromFullText( fullText, regexStr, currQNum=1 ) {
         const questionStringArray = [];
         var currIndex = 0;
         while ( currIndex < fullText.length ) {
-            var startOfThisQuestion = StringUtils.indexOf( currQNum, '[ ]*\\.', fullText );
-            var startOfNextQuestion = StringUtils.indexOf( currQNum+1, '[ ]*\\.', fullText );
+            var startOfThisQuestion = StringUtils.indexOf( currQNum, regexStr, fullText );
+            var startOfNextQuestion = StringUtils.indexOf( currQNum+1, regexStr, fullText );
             if ( startOfNextQuestion != -1 ) {
                 questionStringArray.push( fullText.substring( startOfThisQuestion, startOfNextQuestion ).trim() );
                 currIndex = startOfNextQuestion;
@@ -237,34 +285,6 @@ class QuestionDataExtractor {
         }
         return questionStringArray;
     }
-}
-
-class AnswerDataExtractor {
-    // '3.   B.   Many of these answers are nonsensical in terms of what AWS allows. The limits on size  related to S3 are for objects; an individual object can be as large as 5 TB. Both A and C,  then, are not useful (or possible). D proposes to increase the maximum object size to 50  GB, but the maximum object size is already 5 TB. Option B is correct; AWS recommends  using Multipart Upload for all objects larger than 100 MB.      '
-    // '4.   C, D.   PUTs of new objects have a read after write consistency. DELETEs and overwrite  PUTs have eventual consistency across S3.      '
-    extractAnswers( answerPagesTextArray, qNum=1 ) {
-        const answersText = StringUtils.tabsToSingleWhitespace( answerPagesTextArray );
-        const answers = [];
-        while (answersText.indexOf(qNum + ".") > -1) {
-            // var re1 = new RegExp(qNum + '\\.[\\s]+[A-E]', 'g');
-            // const ansStart = answersText.search(re1);
-            const ansStart = StringUtils.indexOf( qNum, '\\.[\\s]+[A-E]', answersText );
-            const afterPeriodPos = ansStart+qNum.toString().length+1;
-            const ansStr = answersText.substring(afterPeriodPos, answersText.indexOf('.', afterPeriodPos)).trim();
-            if (ansStr.indexOf(',') > -1) { // multiple correct answers
-                var arr = ansStr.split(',').map( item => item.trim() );
-                answers.push(arr);
-            } else {
-                answers.push(ansStr);
-            }
-            qNum++;
-        }
-        return answers;
-    }
-
-}
-
-class StringUtils {
     
     /**
      * The whole reason this helper method exists is because one of the question numbers
