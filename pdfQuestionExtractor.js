@@ -82,7 +82,7 @@
 
     const quizCreator = new QuizCreator();
     const quiz = quizCreator.createQuiz( questionPagesText, answerPagesText );
-    console.log( quiz.toJson() );
+    document.getElementById('jsonOutput').innerHTML = quiz.toJson();
   }
 
   async function printQPages() {
@@ -210,8 +210,4 @@ function renderPage() {
     armButtonWithListener('printQPages', 'click', printQPages);
     armButtonWithListener('printAPages', 'click', printAPages);
     armButtonWithListener('createQuiz', 'click', createQuiz);
-  }
-
-  module.exports = {
-    maxAnsIndex
   }
