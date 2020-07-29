@@ -89,14 +89,14 @@
     const questionPagesText = 
       await getTextFromPages( getIntValue('qPageNumFrom'), 
                               getIntValue('qPageNumTo') );
-    console.log( questionPagesText );
+    document.getElementById('jsonOutput').innerHTML = questionPagesText;
   }
 
   async function printAPages() {
     const answerPagesText = await 
       getTextFromPages( getIntValue('ansPageNumFrom'), 
                         getIntValue('ansPageNumTo'));
-    console.log( answerPagesText );
+    document.getElementById('jsonOutput').innerHTML = answerPagesText;
   }
 
   /**
