@@ -257,7 +257,7 @@ class AnswerDataExtractor {
     }
 
     splitAnswerStrings( answersText, qNum=1 ) {
-        return StringUtils.splitStringsFromFullText( answersText, '\\.[\\s]+[A-E]', qNum );
+        return StringUtils.splitStringsFromFullText( answersText, '[\\s]*\\.[\\s]+[A-E]', qNum );
     }
 }
 
