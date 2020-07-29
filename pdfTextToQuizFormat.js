@@ -113,7 +113,7 @@ class QuizQuestion {
             "  question: '" + this.#question + "',\n" +
             '  choices: {\n');
         this.#choices.forEach( (choice, index) => {
-            var choiceStr = '    ' + StringUtils.nextChar('a', index) + ": '" + choice + "'";
+            var choiceStr = '    ' + StringUtils.nextChar('A', index) + ": '" + choice + "'";
             if (index < this.#choices.length-1) {
                 choiceStr += ',';
             }
@@ -268,22 +268,27 @@ class StringUtils {
      * @param {String} fullText 
      */
     static splitStringsFromFullText( fullText, regexStr, currQNum=1 ) {
-        const questionStringArray = [];
+        const splitStrArray = [];
         var currIndex = 0;
-        while ( currIndex < fullText.length ) {
-            var startOfThisQuestion = StringUtils.indexOf( currQNum, regexStr, fullText );
-            var startOfNextQuestion = StringUtils.indexOf( currQNum+1, regexStr, fullText );
-            if ( startOfNextQuestion != -1 ) {
-                questionStringArray.push( fullText.substring( startOfThisQuestion, startOfNextQuestion ).trim() );
-                currIndex = startOfNextQuestion;
+        var remainingText = fullText;
+        while ( currIndex < remainingText.length ) {
+            var startOfThisStr = StringUtils.indexOf( currQNum, regexStr, remainingText );
+            var startOfNextStr = StringUtils.indexOf( currQNum+1, regexStr, remainingText );
+            if ( startOfNextStr != -1 ) {
+                var thisStr = remainingText.substring( startOfThisStr, startOfNextStr ).trim();
+                splitStrArray.push( thisStr );
+                // currIndex = startOfNextStr;
+                // remainingText = remainingText.substring( currIndex );
+                remainingText = remainingText.substring( startOfNextStr );
                 currQNum++;
                 }
             else { // end of line?
-                questionStringArray.push( fullText.substring( startOfThisQuestion ).trim() );
+                var thisStr = remainingText.substring( startOfThisStr ).trim();
+                splitStrArray.push( thisStr );
                 break;
             }
         }
-        return questionStringArray;
+        return splitStrArray;
     }
     
     /**
