@@ -41,10 +41,16 @@
             <input type="text" id="ansPageNumTo" name="ansPageNumTo" value="1" size="5">
             <input type="button" id="printAPages" value="Print Answer Pages">
             <br>
-            <input type="button" id="createQuiz" value="Create Quiz">
+            <label for="jsFileName">JSON File Name (No Spaces):</label>
+            <input type="text" id="jsFileName" name="jsFileName" value="" size="20">
+            <br>
+            <input type="button" id="createQuiz" value="Create Quiz Questions HTML and JSON">
         </div>
         <canvas id="the-canvas"></canvas>
-        <textarea id="jsonOutput" name="jsonOutput" rows="80" cols="120"></textarea>
+        <div>
+            <textarea id="htmlOutput" name="htmlOutput" rows="80" cols="80"></textarea>
+            <textarea id="jsonOutput" name="jsonOutput" rows="80" cols="80"></textarea>
+        </div>
         <script src="pdfTextToQuizFormat.js"></script>
         <script src="pdfQuestionExtractor.js"></script>
         <script>

@@ -83,6 +83,33 @@
     const quizCreator = new QuizCreator();
     const quiz = quizCreator.createQuiz( questionPagesText, answerPagesText );
     document.getElementById('jsonOutput').innerHTML = quiz.toJson();
+
+    const htmlStr = createHtml( document.getElementById('jsFileName').value );
+    document.getElementById('htmlOutput').innerHTML = htmlStr;
+  }
+
+  function createHtml( fileName ) {
+    return "<!DOCTYPE html>\n" + 
+    "<html>\n" + 
+    "    <head>\n" + 
+    `        <title>${fileName} Quiz</title>\n` +
+    '        <link href="../common/quiz.css" rel="stylesheet" type="text/css">\n' +
+    '    </head>\n' +
+    '    <body>\n' + 
+    '        <div id="quiz">\n' +
+    '\n' +
+    '        </div>\n' +
+    '        <button id="submit">Submit</button>\n' +
+    '        <div id="results">\n' +
+    '\n' +
+    '        </div>\n' + 
+    '        <script src="../common/quizGenerator.js"></script>\n' + 
+    `        <script src="${fileName}.js"></script>\n` +
+    "        <script>\n" + 
+    "            generateQuiz(myQuestions, document);\n" + 
+    "        </script>\n" + 
+    "    </body>\n" + 
+    "</html>";
   }
 
   async function printQPages() {
