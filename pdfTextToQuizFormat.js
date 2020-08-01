@@ -299,7 +299,7 @@ class StringUtils {
      * @param {String} text the text string in which to search
      */
     static indexOf( currQNum, regexStr, text ) {
-        var re1 = new RegExp(currQNum.toString() + regexStr, "g");
+        var re1 = new RegExp( '[ ]+' + currQNum.toString() + regexStr, "g");
         var pos = text.search( re1 );
         if ( pos > -1 ) {
             return pos;
@@ -307,7 +307,7 @@ class StringUtils {
 
         // didn't find the number. e.g. 67. now we are looking for 6 7
         var individualDigitsArray = currQNum.toString().split('');
-        var searchStrForIndividualDigits = '';
+        var searchStrForIndividualDigits = '[ ]+';
         individualDigitsArray.forEach( (digit, i) => {
             searchStrForIndividualDigits += digit;
             if ( i < individualDigitsArray.length-1 ) {
