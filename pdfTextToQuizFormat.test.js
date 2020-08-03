@@ -59,6 +59,33 @@ test( 'extract question data for string with only question and no choices extrac
     expect( q[0] ).toEqual( expectedQ );
 });
 
+test( 'extractQuestions for "VPC." causing the "C." to be misinterpreted as a choice', () => {
+    const qExtractor = new QuestionDataExtractor();
+    const quizQs = qExtractor.extractQuestions( [PROBLEM_QUESTION_WITH_VPC_DOT], 13 );
+    expect( quizQs.length ).toBe( 5 );
+    expect( quizQs[4].choices[0] ).toEqual('Attach a customer gateway to the VPC.');
+    expect( quizQs[4].choices[1] ).toEqual('Make the subnet public using the AWS CLI and the subnet command.');
+});
+
+const PROBLEM_QUESTION_WITH_VPC_DOT = 
+    'Chapter 6   ■   Practice Test   169    ' + 
+    '13.   What common step that is often omitted in setting up a NAT instance can cause a failure  in routing traffic from an EC2 instance through the NAT instance and out to the Internet? ' + 
+    'A.   Adding a rule to the security group for the NAT instance that allows traffic out to the  Internet ' + 
+    'B.   Setting the NAT instance up to use an EBS volume with provisioned IOPS ' + 
+    'C.   Setting the NACL on the subnet with the EC2 instances to allow in traffic from the  Internet ' + 
+    'D.   Ensuring that the Source/Destination Check option is disabled on the NAT instance    ' + 
+    '14.   Which of these S3 storage classes is the most durable? ' + 
+    'A.     S3 B.      S3-IA C.   S3 One Zone-IA D.   All of these classes are equally durable.    ' + 
+    '15.   You have been tasked with setting up storage for an application that loads large photos  from an existing RDS. These photos are then processed by a Lambda function and have  metadata added, along with additional filters. The Lambda code is inexpensive and can  easily be rerun if needed. You need to decide on where to store the photos once they have  been processed. Each photo will likely be accessed between 1 and 5 times over the course  of a month and should be quickly accessible. The chief driver for the application and your  decision should be cost and user experience. What S3 storage class would you select? ' + 
+    'A.     S3 B.   S3 IA C.   S3 One Zone-IA D.      Glacier    ' + 
+    '16.   You have a growing fleet of EC2 instances that have been using EBS volumes for data  storage. Each instance needs access to all other instances’ data, and your custom replica- tion scripts are growing increasingly taxed and complex. What would you recommend to  replace the current usage of EBS volumes and replication? ' + 
+    'A.     EBS B.      DynamoDB C.      EFS D.   Service Catalog     ' + 
+    '17.   You are responsible for setting up the architecture for a new web-based online dating site.  You need to create a public subnet in a custom VPC and already have a subnet in the VPC  with EC2 instances within it. What other steps would you need to take to make the subnet  public? (Choose two.) ' + 
+    'A.   Attach a customer gateway to the VPC. ' + // <-- PROBLEM LINE
+    'B.   Make the subnet public using the AWS CLI and the subnet command. ' + 
+    'C.   Attach an internet gateway to the VPC. ' + 
+    'D.   Add a route for the instances in the subnet to the Internet through the attached gateway.';
+
 test( 'splitQuestionStrings For Sybex Practice Exam Text', () => {
     const qExtractor = new QuestionDataExtractor();
     const questionStringArray = qExtractor.splitQuestionStrings( SYBEX_QUESTIONS_1ST_PAGE );

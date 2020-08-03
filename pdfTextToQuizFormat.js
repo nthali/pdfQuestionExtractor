@@ -198,31 +198,31 @@ class QuestionDataExtractor {
         question = intermediate.substring( indexOfQuestionTextStart ).trim();
 
         if ( indexOfFirstChoice > -1 ) {
-            choices = Array.from(this.extractChoices(text.substring(indexOfFirstChoice), 0));
+            choices = Array.from(this.extractChoices(text.substring(indexOfFirstChoice), '[ ]*\\.', 'A'));
         }
 
         return [ question, choices ];
     }
 
-    extractChoices(text, indexOfFirstChoice) {
+    // this method is unnervingly similar to splitStringsFromFullText
+    // and could possibly be refactored, but it would require some callback
+    // methods to be passed in, which i'm not ready for
+    extractChoices(text, regexStr, currChoice='A') {
         var choices = [];
-
-        var currChoice = 'A';
-        var nextChoice = StringUtils.nextChar(currChoice, 1);
-        var currIndex = indexOfFirstChoice;
+        var currIndex = 0;
+        var remainingText = text;
         while ( currIndex < text.length ) {
-            var re1 = new RegExp(currChoice + '[ ]*\\.', "g");
-            var re2 = new RegExp(nextChoice + '[ ]*\\.', "g");
-            var startOfThisChoice = text.search(re1);
-            var startOfNextChoice = text.search(re2);
+            var startOfThisChoice = StringUtils.indexOf( currChoice, regexStr, text );
+            var startOfNextChoice = StringUtils.indexOf( StringUtils.nextChar(currChoice, 1), regexStr, text );
             if ( startOfNextChoice != -1 ) {
-                choices.push( text.substring( startOfThisChoice+4, startOfNextChoice ).trim() );
-                currIndex = startOfNextChoice;
-                currChoice = nextChoice;
-                nextChoice = StringUtils.nextChar(currChoice, 1);
+                var thisStr = text.substring( startOfThisChoice+4, startOfNextChoice ).trim();
+                choices.push( thisStr );
+                remainingText = remainingText.substring( startOfNextChoice );
+                currChoice = StringUtils.nextChar(currChoice, 1);
             }
             else { // end of line?
-                choices.push( text.substring( startOfThisChoice+4 ).trim() );
+                var thisStr = text.substring( startOfThisChoice+4 ).trim();
+                choices.push( thisStr );
                 break;
             }
         }
@@ -277,11 +277,9 @@ class StringUtils {
             if ( startOfNextStr != -1 ) {
                 var thisStr = remainingText.substring( startOfThisStr, startOfNextStr ).trim();
                 splitStrArray.push( thisStr );
-                // currIndex = startOfNextStr;
-                // remainingText = remainingText.substring( currIndex );
                 remainingText = remainingText.substring( startOfNextStr );
                 currQNum++;
-                }
+            }
             else { // end of line?
                 var thisStr = remainingText.substring( startOfThisStr ).trim();
                 splitStrArray.push( thisStr );
@@ -292,9 +290,9 @@ class StringUtils {
     }
     
     /**
-     * The whole reason this helper method exists is because one of the question numbers
-     * in a pdf got extracted as '6 7', instead of 67. Go figure.
-     * it tries to fix such deformed question numbers.
+     * The whole reason this helper method exists is because 
+     * Q numbers 67, 77 and 87 are extracted as 6 7, 7 7 and 8 7. Go figure.
+     * it tries to accommodate such deformed question numbers.
      * @param {Integer} currQNum the question number we are looking for
      * @param {String} text the text string in which to search
      */
